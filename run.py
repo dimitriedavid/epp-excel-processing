@@ -5,20 +5,15 @@ import pyexcel as p
 import os
 
 files = os.listdir('.')
-files.remove('run.py')
 
 for filename in files:
-    # filename = 'SITUATIE FURNIZORI - FACTURI NEACHITATE 24.06.2022.xls'
+    # if file is not xlsx file, skip
+    if not (filename.endswith('.xlsx') or filename.endswith('.xls')):
+        continue
 
-    try:
-        p.save_book_as(file_name=filename,
-                dest_file_name=filename+'x')
-        os.remove(filename)
-    except Exception as e:
-        print("xls not found. moving to xlsx")
-
-    if not filename.endswith('xlsx'):
-        filename = filename+'x'
+    # if file is xls open it and save it as xlsx
+    if filename.endswith('.xls'):
+        p.save_book_as(file_name=filename, dest_file_name=filename + 'x')
 
     print("Processing file: " + filename)
 
@@ -40,7 +35,7 @@ for filename in files:
     rows_to_be_deleted = []
 
     for cell in colB:
-        if company == None and cell.value != None:
+        if company == None and cell.value != None and not str(cell.value).startswith('Cont'):
             company = cell.value
             # print(wb[cell.row + 1][cell.column - 1].value)
             cod = wb[cell.row + 1][cell.column - 1].value
@@ -48,7 +43,7 @@ for filename in files:
                 cui = cod.split(' ')[4]
             else:
                 cui = ''
-        if str(cell.value).startswith('Total'):
+        if str(cell.value).startswith('Total') or str(cell.value).startswith('Cont'):
             company = None
         if type(cell.value) == datetime.datetime:
             # append to the cell on the left of this cell, the company name
@@ -57,7 +52,6 @@ for filename in files:
             wb[row][col - 2].value = company
             wb[row][col - 1].value = cui
         else:
-            # print(cell.value)
             rows_to_be_deleted.append(cell.row)
 
     # delete the rows
